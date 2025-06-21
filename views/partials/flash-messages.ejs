@@ -1,0 +1,10 @@
+<% if (typeof error !== 'undefined' && error) { %>
+    <div class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-center mb-4">
+        <%= error %>
+    </div>
+<% } %>
+<% if (typeof success !== 'undefined' && success) { %>
+    <div class="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-center mb-4">
+        <%= success %>
+    </div>
+<% } %> 

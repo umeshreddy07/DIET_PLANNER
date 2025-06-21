@@ -1,0 +1,116 @@
+/* Theme CSS: Pure White, Light Black Navbar, Colorful Gradient Cards */
+:root {
+  --primary-bg: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  --secondary-bg: linear-gradient(135deg, #fdf6ff 0%, #e0f7fa 100%);
+  --card-bg: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  --card-bg-alt: linear-gradient(135deg, #fceabb 0%, #f8b500 100%);
+  --card-bg-alt2: linear-gradient(135deg, #f8ffae 0%, #43c6ac 100%);
+  --card-bg-alt3: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+  --hover-bg: #f1f1f1;
+  --code-bg: #f8f9fa;
+  --gradient-bg: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+  --primary-text: #111;
+  --secondary-text: #444;
+  --accent-color: #f59e42;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #a78bfa;
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0,0,0,0.08);
+  --white: #fff;
+  --dark: #23272f;
+  --darker: #1a1a1a;
+  --gray: #a6a6a6;
+  --font-main: 'Poppins', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Share Tech Mono', 'Quicksand', monospace;
+  transition: background 0.3s, color 0.3s;
+}
+[data-theme='dark'] {
+  --primary-bg: #18191a;
+  --secondary-bg: #23272f;
+  --card-bg: linear-gradient(135deg, #23272f 0%, #393e46 100%);
+  --card-bg-alt: linear-gradient(135deg, #23272f 0%, #393e46 100%);
+  --card-bg-alt2: linear-gradient(135deg, #23272f 0%, #393e46 100%);
+  --card-bg-alt3: linear-gradient(135deg, #23272f 0%, #393e46 100%);
+  --hover-bg: #23272f;
+  --code-bg: #23272f;
+  --primary-text: #fff;
+  --secondary-text: #d1d5db;
+  --accent-color: #f59e42;
+  --success-color: #34d399;
+  --warning-color: #fbbf24;
+  --error-color: #f87171;
+  --info-color: #a78bfa;
+  --border-color: #393e46;
+  --shadow-color: rgba(0,0,0,0.3);
+}
+body {
+  background: var(--primary-bg);
+  color: var(--primary-text);
+  font-family: var(--font-main);
+  transition: background 0.3s, color 0.3s;
+}
+.card, .content-card {
+  background: var(--card-bg);
+  color: var(--primary-text);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 24px var(--shadow-color);
+  border-radius: 1.5rem;
+  transition: background 0.3s, color 0.3s;
+}
+.card.alt1, .content-card.alt1 { background: var(--card-bg-alt); }
+.card.alt2, .content-card.alt2 { background: var(--card-bg-alt2); }
+.card.alt3, .content-card.alt3 { background: var(--card-bg-alt3); }
+
+.navbar, .floating-navbar {
+  background: var(--dark);
+  color: var(--white);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 24px var(--shadow-color);
+  transition: background 0.3s, color 0.3s;
+}
+.button, .hero-cta {
+  background: var(--accent-color);
+  color: var(--white);
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+.button:hover, .hero-cta:hover {
+  background: var(--info-color);
+  color: var(--white);
+}
+a {
+  color: var(--accent-color);
+  transition: color 0.2s;
+}
+a:hover {
+  color: var(--info-color);
+}
+input, textarea, select {
+  background: var(--secondary-bg);
+  color: var(--primary-text);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: background 0.2s, color 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--accent-color);
+}
+::-webkit-scrollbar {
+  width: 8px;
+  background: var(--secondary-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+section, .section-bg {
+  background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+  border-radius: 2rem;
+  box-shadow: 0 2px 16px var(--shadow-color);
+  margin-bottom: 2rem;
+} 

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"> <!-- Default to light, JS will override with user's preference -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | FitGenie AI</title>
+    
+    <!-- TAILWIND & ICONS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- GOOGLE FONTS (Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- ANIMATION LIBRARY (AOS) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Your main stylesheet -->
+    <!-- This file should contain the color variables for your themes -->
+    <link rel="stylesheet" href="/css/theme.css"> 
+
+    <style>
+        /* Base font and smooth scrolling */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Poppins', sans-serif; }
+
+        /* Reusable gradient text class */
+        .gradient-text {
+            background: linear-gradient(125deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Style for the active navigation link */
+        .active-nav-link {
+            font-weight: 600;
+            color: white !important; /* Use important to override base color */
+            background: linear-gradient(125deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+    </style>
+</head>
+<body class="bg-white text-gray-800 transition-colors duration-500">
+
+<!-- ============================================ -->
+<!-- GLASSMORPHISM NAVBAR -->
+<!-- ============================================ -->
+<nav class="fixed top-4 left-1/2 transform -translate-x-1/2 w-[99vw] max-w-7xl z-[1000] 
+           bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100/90 backdrop-blur-lg border border-gray-300/60 rounded-3xl shadow-2xl shadow-blue-200/40">
+    <div class="container mx-auto flex justify-between items-center py-3 px-10">
+        <!-- Brand/Logo -->
+        <a href="/" class="flex items-center space-x-2 group">
+            <img src="/images/logo.png" alt="FitGenie Logo" class="w-12 h-12 rounded-full transition-transform group-hover:rotate-12">
+            <span class="font-black text-2xl text-gray-900 tracking-tight hidden sm:inline">Fit<span class="gradient-text bg-gradient-to-r from-blue-400 to-purple-500">Genie</span></span>
+        </a>
+        <!-- Main Navigation Links (Desktop) -->
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="/" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Home</a>
+            <a href="/profile" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Dashboard</a>
+            <a href="/diet-plan" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Diet Plan</a>
+            <a href="/workout-plan" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Workout Plan</a>
+            <a href="/progress" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Track Progress</a>
+        </div>
+        <!-- Right-side Controls -->
+        <div class="flex items-center space-x-6">
+            <% if (user) { %>
+                <% const profileImg = user && user.profileImage ? user.profileImage : '/images/icon.webp'; %>
+                <a href="/auth/logout" class="text-gray-400 hover:text-blue-700 transition-colors" title="Logout">
+                    <i class="fas fa-sign-out-alt text-2xl"></i>
+                </a>
+                <a href="/profile" class="block group" title="Profile">
+                    <img class="w-12 h-12 rounded-full border-2 border-blue-300 group-hover:border-blue-500 transition-all duration-300 object-cover" src="<%= profileImg %>" alt="User profile">
+                </a>
+            <% } else { %>
+                <a href="/auth/login" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    Login
+                </a>
+            <% } %>
+        </div>
+    </div>
+</nav>
+
+<!-- Main content starts here, pt-24 provides space for the fixed navbar -->
+<main class="pt-24">
+
+<script>
+    // --- ACTIVE NAV LINK HIGHLIGHTER ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const currentPath = window.location.pathname;
+
+        navLinks.forEach(link => {
+            // Check if the link's href is exactly the current path
+            // For the home link, we check for "/"
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active-nav-link');
+            }
+        });
+    });
+</script>
+
+<!-- AOS Initialization -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 900,
+    once: true,
+    easing: 'ease-in-out',
+  });
+</script>

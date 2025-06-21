@@ -1,0 +1,211 @@
+<%- include('partials/header', { title: 'Your Dashboard', user: user }) %>
+
+<style>
+    /* Custom styles for our super-cool range sliders */
+    .range-slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: #e2e8f0; outline: none; opacity: 0.8; transition: opacity .2s; }
+    .range-slider:hover { opacity: 1; }
+    .range-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 4px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+    .range-slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; cursor: pointer; }
+
+    /* Styles for our awesome clickable diet preference cards */
+    .diet-card {
+        transition: all 0.2s ease-in-out;
+    }
+    .diet-card.active {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+        border-color: #3b82f6; /* A consistent active blue color */
+    }
+</style>
+
+<div class="bg-slate-50 min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto lg:grid lg:grid-cols-12 lg:gap-12">
+
+        <!-- ================================= -->
+        <!-- LEFT "PLAYER" CARD -->
+        <!-- ================================= -->
+        <aside class="lg:col-span-4 mb-8 lg:mb-0" data-aos="fade-right" data-aos-delay="100">
+            <div class="sticky top-28 space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-lg text-center">
+                    <div class="relative w-36 h-36 mx-auto mb-4 flex items-center justify-center bg-gradient-to-br from-teal-200 to-lime-200 rounded-full overflow-hidden">
+                        <% const profileImg = user && user.profileImage ? user.profileImage : '/images/icon.webp'; %>
+                        <img class="w-full h-full object-cover" src="<%= profileImg %>" alt="User profile">
+                    </div>
+                    <h1 class="text-3xl font-extrabold text-gray-800">Hello, <br> <span class="gradient-text"><%= user.name || 'Future Legend' %>!</span></h1>
+                    <p class="text-sm text-gray-500 mt-2 px-4">Your journey is unique, powerful, and it starts right now.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-lg space-y-4">
+                     <% if (user.bmi) { %>
+                        <div class="flex items-center gap-4"><div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600"><i class="fas fa-heartbeat text-2xl"></i></div><div><p class="text-sm font-semibold text-gray-500">Your BMI</p><p class="text-2xl font-bold text-gray-700"><%= user.bmi %></p></div></div>
+                    <% } %>
+                    <% if (user.idealWeight) { %>
+                       <div class="flex items-center gap-4"><div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-purple-100 text-purple-600"><i class="fas fa-star text-2xl"></i></div><div><p class="text-sm font-semibold text-gray-500">Goal Weight</p><p class="text-2xl font-bold text-gray-700"><%= user.idealWeight %> kg</p></div></div>
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ================================= -->
+        <!-- RIGHT "CHARACTER SHEET" FORM -->
+        <!-- ================================= -->
+        <main class="lg:col-span-8" data-aos="fade-up" data-aos-delay="200">
+            <!-- Funny Roast Quotes Block (Start) -->
+            <div class="max-w-xl mx-auto my-8 p-6 rounded-2xl text-center bg-gradient-to-r from-green-100 via-yellow-100 to-pink-100 shadow-md">
+              <p class="text-lg font-semibold text-gray-700 mb-0">"I follow a seafood diet. I see food, and I eat it. 👀🍔"</p>
+            </div>
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <div><h2 class="text-3xl font-bold text-gray-800">Your Command Center</h2><p class="mt-1 text-sm text-gray-500">This is the blueprint for the new you. Let's make every detail count!</p></div>
+
+                <% if (success) { %><div class="mt-6 flex items-center gap-4 bg-green-100 text-green-800 p-4 rounded-xl shadow-sm border-l-4 border-green-500" role="alert"><i class="fas fa-rocket text-2xl fa-beat"></i><div><p class="font-bold">YES! Profile Locked & Loaded!</p><p class="text-sm"><%= success %>. Your AI coach is already doing a happy dance.</p></div></div><% } %>
+                <% if (error) { %><div class="mt-6 flex items-center gap-4 bg-red-100 text-red-800 p-4 rounded-xl shadow-sm border-l-4 border-red-500" role="alert"><i class="fas fa-ghost text-2xl fa-fade"></i><div><p class="font-bold">Whoops! A Wild Gremlin Appeared.</p><p class="text-sm"><%= error %>. Don't worry, even superheroes have off days.</p></div></div><% } %>
+                
+                <form action="/profile" method="POST" class="mt-8 space-y-12">
+                    <!-- SECTION 1: Core Stats -->
+                    <fieldset class="space-y-6"><legend class="text-lg font-semibold text-gray-700">Level 1: Core Stats</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"><div><label for="height" class="flex justify-between items-center text-sm font-medium text-gray-700"><span>Your Stature (cm)</span><span class="font-bold text-blue-600 text-base"><span id="height-value"><%= user.height || 170 %></span> cm</span></label><input id="height" name="height" type="range" min="100" max="250" value="<%= user.height || 170 %>" class="range-slider mt-2"></div><div><label for="weight" class="flex justify-between items-center text-sm font-medium text-gray-700"><span>Current Weight (kg)</span><span class="font-bold text-blue-600 text-base"><span id="weight-value"><%= user.weight || 75 %></span> kg</span></label><input id="weight" name="weight" type="range" min="30" max="250" value="<%= user.weight || 75 %>" class="range-slider mt-2"></div></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
+                            <div><label for="name" class="block text-sm font-medium text-gray-700">Your Name</label><input id="name" name="name" type="text" value="<%= user.name || '' %>" required class="w-full mt-1 px-4 py-2 bg-slate-100 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition" placeholder="Captain Awesome"></div>
+                            <div><label for="age" class="block text-sm font-medium text-gray-700">Age</label><input id="age" name="age" type="number" value="<%= user.age || '' %>" class="w-full mt-1 px-4 py-2 bg-slate-100 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition" placeholder="e.g. 28"></div>
+                             <div><label for="gender" class="block text-sm font-medium text-gray-700">Gender</label><select id="gender" name="gender" class="w-full mt-1 px-4 py-2.5 bg-slate-100 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"><option value="Male" <%= user.gender === 'Male' ? 'selected' : '' %>>Male</option><option value="Female" <%= user.gender === 'Female' ? 'selected' : '' %>>Female</option><option value="Other" <%= user.gender === 'Other' ? 'selected' : '' %>>Other</option></select></div>
+                        </div>
+                    </fieldset>
+
+                    <!-- SECTION: 30-Day Consistency Heatmap -->
+                    <fieldset class="space-y-4">
+                        <legend class="text-lg font-semibold text-gray-700">Your 30-Day Consistency Map</legend>
+                        <%
+                            // --- Logic to create the heatmap ---
+                            // 1. Create a quick-lookup map of progress entries by date.
+                            const progressMap = new Map();
+                            if(user.progressHistory) {
+                                user.progressHistory.forEach(entry => {
+                                    const dateKey = new Date(entry.date).toISOString().split('T')[0];
+                                    // If multiple logs on the same day, keep the one with the highest score
+                                    if (!progressMap.has(dateKey) || entry.aiScore > progressMap.get(dateKey).aiScore) {
+                                        progressMap.set(dateKey, entry);
+                                    }
+                                });
+                            }
+                            // 2. A helper function to get the color based on score.
+                            function getScoreColor(score) {
+                                if (score >= 9) return 'bg-teal-500';
+                                if (score >= 7) return 'bg-green-500';
+                                if (score >= 5) return 'bg-yellow-400';
+                                if (score >= 1) return 'bg-red-400';
+                                return 'bg-slate-200';
+                            }
+                        %>
+                        <div class="grid grid-cols-10 gap-2 p-4 bg-slate-100 rounded-lg">
+                            <% for(let i = 29; i >= 0; i--) { %>
+                                <%
+                                    const date = new Date();
+                                    date.setDate(date.getDate() - i);
+                                    const dateKey = date.toISOString().split('T')[0];
+                                    const entry = progressMap.get(dateKey);
+                                %>
+                                <div class="relative group">
+                                     <div class="aspect-square rounded-md text-white font-bold text-xs flex items-center justify-center 
+                                                <%= entry ? getScoreColor(entry.aiScore) : 'bg-slate-200 hover:bg-slate-300' %>">
+                                        <%= entry ? entry.aiScore : '' %>
+                                     </div>
+                                     <!-- Tooltip -->
+                                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 w-max text-xs text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                         <%= date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                                         <% if(entry) { %>
+                                             <span class="font-bold">: Score <%= entry.aiScore %></span>
+                                         <% } else { %>
+                                            <span class="text-gray-400">: No log</span>
+                                         <% } %>
+                                     </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </fieldset>
+
+                   <!-- SECTION 2: The Fuel Source (Corrected for null values) -->
+<fieldset class="space-y-4">
+    <legend class="text-lg font-semibold text-gray-700">Level 2: The Fuel Source</legend>
+    <p class="text-sm text-gray-500 -mt-2">Pick your eating style(s). This is crucial for your AI to cook up the perfect plan!</p>
+    
+    <!-- This hidden input holds the comma-separated value for the backend -->
+    <input type="hidden" name="dietaryPreference" id="dietary-preference-hidden" value="<%= user.dietaryPreference || '' %>">
+    
+    <div id="diet-selection" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Helper to render a diet card -->
+        <%
+        function renderDietCard(value, icon, label, color, currentUserPref) {
+            let preferences = [];
+            if (Array.isArray(currentUserPref)) {
+                preferences = currentUserPref;
+            } else if (typeof currentUserPref === 'string') {
+                preferences = currentUserPref.split(',').map(p => p.trim());
+            }
+            const isActive = preferences.includes(value);
+        %>
+            <label class="diet-card cursor-pointer p-4 border-2 rounded-xl text-center flex flex-col items-center justify-center <%= isActive ? 'active' : 'border-gray-200' %>">
+                <input type="checkbox" value="<%= value %>" class="sr-only" <%= isActive ? 'checked' : '' %>>
+                <i class="fas <%= icon %> text-3xl mb-2" style="color: <%= color %>;"></i>
+                <span class="font-semibold text-gray-700"><%= label %></span>
+            </label>
+        <% } %>
+
+        <%- renderDietCard('Veg', 'fa-seedling', 'Veg', '#22c55e', user.dietaryPreference) %>
+        <%- renderDietCard('Non-veg', 'fa-drumstick-bite', 'Non-Veg', '#ef4444', user.dietaryPreference) %>
+        <%- renderDietCard('Keto', 'fa-bacon', 'Keto', '#f97316', user.dietaryPreference) %>
+        <%- renderDietCard('South Indian Desi', 'fa-pepper-hot', 'South Indian', '#eab308', user.dietaryPreference) %>
+    </div>
+</fieldset>
+
+                    <!-- SECTION 3: The Grand Mission -->
+                     <fieldset class="space-y-6"><legend class="text-lg font-semibold text-gray-700">Level 3: The Grand Mission</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"><div><label for="fitnessGoal" class="block text-sm font-medium text-gray-700">Primary Goal</label><select id="fitnessGoal" name="fitnessGoal" class="w-full mt-1 px-4 py-2.5 bg-slate-100 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"><option value="" disabled>Select your quest...</option><option value="Weight Loss" <%= user.fitnessGoal === 'Weight Loss' ? 'selected' : '' %>>Operation: Slim Down</option><option value="Muscle Gain" <%= user.fitnessGoal === 'Muscle Gain' ? 'selected' : '' %>>Project: Build Power</option><option value="Fat Loss" <%= user.fitnessGoal === 'Fat Loss' ? 'selected' : '' %>>Mission: Get Lean</option><option value="Weight Gain" <%= user.fitnessGoal === 'Weight Gain' ? 'selected' : '' %>>Campaign: Bulk Up</option><option value="Maintain" <%= user.fitnessGoal === 'Maintain' ? 'selected' : '' %>>Quest: Stay Awesome</option></select></div><div><label for="activityLevel" class="block text-sm font-medium text-gray-700">Weekly Grind</label><select id="activityLevel" name="activityLevel" class="w-full mt-1 px-4 py-2.5 bg-slate-100 border-transparent rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"><option value="" disabled>How epic are you?</option><option value="Sedentary" <%= user.activityLevel === 'Sedentary' ? 'selected' : '' %>>Master of the Chair</option><option value="Moderate" <%= user.activityLevel === 'Moderate' ? 'selected' : '' %>>Weekend Adventurer</option><option value="Active" <%= user.activityLevel === 'Active' ? 'selected' : '' %>>Non-stop Energizer</option></select></div></div>
+                    </fieldset>
+                    
+                    <div><button type="submit" class="w-full flex items-center justify-center py-4 px-4 text-lg font-bold rounded-full text-white bg-gradient-to-r from-blue-600 to-purple-600 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-400/50 transition-all duration-300"><i class="fas fa-bolt mr-3"></i> Forge My New Path!</button></div>
+                </form>
+            </div>
+            <!-- Funny Roast Quotes Block (End) -->
+            <div class="max-w-xl mx-auto my-8 p-6 rounded-2xl text-center bg-gradient-to-r from-pink-100 via-blue-100 to-green-100 shadow-md">
+              <p class="text-lg font-semibold text-gray-700 mb-0">"Running late counts as cardio, right? 🏃‍♂️⏰"</p>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Range Slider Logic ---
+    const heightSlider = document.getElementById('height'), heightValueSpan = document.getElementById('height-value');
+    const weightSlider = document.getElementById('weight'), weightValueSpan = document.getElementById('weight-value');
+    if (heightSlider && weightSlider) {
+        const updateValue = (slider, span) => { span.textContent = slider.value; };
+        heightSlider.addEventListener('input', () => updateValue(heightSlider, heightValueSpan));
+        weightSlider.addEventListener('input', () => updateValue(weightSlider, weightValueSpan));
+    }
+
+    // --- Diet Preference Card Logic (Multi-select) ---
+    const dietContainer = document.getElementById('diet-selection');
+    const hiddenDietInput = document.getElementById('dietary-preference-hidden');
+    const dietCards = dietContainer.querySelectorAll('.diet-card');
+
+    dietCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // The click on the <label> tag automatically toggles the checkbox's `checked` state.
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            
+            // Sync the card's visual `.active` class with the checkbox's state.
+            card.classList.toggle('active', checkbox.checked);
+            
+            // Rebuild the comma-separated string for the hidden input field.
+            const selectedValues = Array.from(dietCards)
+                .filter(c => c.querySelector('input[type="checkbox"]').checked)
+                .map(c => c.querySelector('input[type="checkbox"]').value);
+                
+            hiddenDietInput.value = selectedValues.join(',');
+        });
+    });
+});
+</script>
+
+<%- include('partials/footer') %>
