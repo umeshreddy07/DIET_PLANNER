@@ -11,6 +11,10 @@ const flash = require('connect-flash');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const crypto = require('crypto');
+
+// --- Import the NEW authMiddleware ---
+const { checkUser } = require('./middleware/authMiddleware');
 
 const authRoutes = require('./routes/auth');
 const appRoutes = require('./routes/app');
@@ -29,25 +33,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session middleware (required for flash)
+// Session middleware (still required for connect-flash)
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'a-different-secret-for-flash',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { maxAge: 60000 } // Short-lived session just for flash messages
 }));
 app.use(flash());
-// Make flash messages available in all templates
-app.use((req, res, next) => {
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
-    next();
-});
 
 // =============================
-// PASSPORT CONFIGURATION
+// PASSPORT CONFIGURATION (JWT Method)
 // =============================
 app.use(passport.initialize());
-app.use(passport.session());
+// -- REMOVED app.use(passport.session()) --
+// We are now stateless and don't need Passport to manage sessions.
 
 passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
     try {
@@ -68,16 +68,27 @@ passport.use(new GoogleStrategy({
   },
   async function(accessToken, refreshToken, profile, done) {
     try {
+      // Try to find user by googleId
       let user = await User.findOne({ googleId: profile.id });
       if (!user) {
-        // Create a new user with googleId, email, and name (can be blank)
-        user = new User({
-          googleId: profile.id,
-          email: profile.emails[0].value,
-          name: profile.displayName || '',
-          password: Math.random().toString(36).slice(-8) // Dummy password, not used
-        });
-        await user.save();
+        // If not found, try to find by email
+        user = await User.findOne({ email: profile.emails[0].value });
+        if (user) {
+          // Link Google account to existing user
+          user.googleId = profile.id;
+          user.isVerified = true;
+          await user.save();
+        } else {
+          // Create a new user if not found by email
+          user = new User({
+            googleId: profile.id,
+            email: profile.emails[0].value,
+            name: profile.displayName || '',
+            isVerified: true,
+            password: crypto.randomBytes(20).toString('hex')
+          });
+          await user.save();
+        }
       }
       return done(null, user);
     } catch (err) {
@@ -85,20 +96,30 @@ passport.use(new GoogleStrategy({
     }
   }
 ));
-
-passport.serializeUser((user, done) => {
-    done(null, user);
-});
-passport.deserializeUser((obj, done) => {
-    done(null, obj);
-});
+// -- REMOVED passport.serializeUser and passport.deserializeUser --
+// These are not needed for a stateless JWT authentication strategy.
+// Our protect and checkUser middlewares now handle retrieving the user.
 
 // View Engine Setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// ===================================
+// GLOBAL MIDDLEWARE
+// ===================================
+
+// Make flash messages available in all templates
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
+
+// -- USE checkUser on ALL routes --
+app.use(checkUser);
+
 // ========================================================
-// DAILY REMINDER CRON JOB (USING NEW .ENV CONFIG)
+// DAILY REMINDER CRON JOB (No change needed here)
 // ========================================================
 cron.schedule('0 22 * * *', async () => {
     console.log(`[${new Date().toLocaleString()}] Running daily reminder check...`);

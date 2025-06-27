@@ -1,24 +1,36 @@
 const User = require('../models/User');
 const passport = require('passport');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// Helper to create JWT and set cookie
+// ==========================================================
+// JWT & COOKIE HELPER
+// ==========================================================
+
+/**
+ * Creates a JWT for a given user and sets it as a secure, httpOnly cookie.
+ * @param {object} res - The Express response object.
+ * @param {object} user - The mongoose user object.
+ */
 function setTokenCookie(res, user) {
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    // Create the token payload containing the user's ID
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: '7d', // Token will expire in 7 days
+    });
+
+    // Set the cookie
     res.cookie('jwt', token, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true, // Prevents client-side JS from accessing the cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        sameSite: 'lax', // Protects against CSRF attacks
+        secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS in production
     });
 }
 
-// ========================
-// AUTHENTICATION FLOW
-// ========================
+// ==========================================================
+// AUTHENTICATION FLOW (JWT-BASED)
+// ==========================================================
 
 // Show Register Page
 exports.showRegister = (req, res) => res.render('register');
@@ -64,30 +76,46 @@ exports.register = async (req, res) => {
 // Show Login Page
 exports.showLogin = (req, res) => res.render('login');
 
-// Handle Login POST
+/**
+ * Handle Login POST - The JWT Way
+ * We use a custom callback to handle the result of authentication.
+ */
 exports.login = (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/profile', // Success -> Go to Profile/Dashboard
-        failureRedirect: '/auth/login',
-        failureFlash: true
+    // We tell passport to NOT use sessions and use our custom callback
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+        if (err) {
+            return next(err); // Handle server errors
+        }
+        if (!user) {
+            // Authentication failed. 'info' contains the message from passport-local strategy.
+            req.flash('error', info.message);
+            return res.redirect('/auth/login');
+        }
+        
+        // --- Authentication Succeeded ---
+        // 1. Create and set the JWT cookie
+        setTokenCookie(res, user);
+        
+        // 2. Redirect to the profile page
+        res.redirect('/profile');
+
     })(req, res, next);
 };
 
-// Handle Logout
+/**
+ * Handle Logout - The JWT Way
+ * We simply clear the JWT cookie from the user's browser.
+ */
 exports.logout = (req, res, next) => {
-    req.logout((err) => {
-        if (err) { return next(err); }
-        req.flash('success', 'You are logged out');
-        res.redirect('/auth/login');
-    });
+    res.clearCookie('jwt'); // Remove the token cookie
+    req.flash('success', 'You have been successfully logged out.');
+    res.redirect('/auth/login');
 };
 
-// ===============================
-// PASSWORD RESET LOGIC
-// ===============================
-
+// ==========================================================
+// PASSWORD RESET LOGIC (No changes needed here)
+// ==========================================================
 exports.showForgotPassword = (req, res) => res.render('forgotPassword');
-
 exports.sendResetLink = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
