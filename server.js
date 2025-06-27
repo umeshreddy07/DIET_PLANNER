@@ -119,7 +119,7 @@ app.use((req, res, next) => {
 app.use(checkUser);
 
 // ========================================================
-// DAILY REMINDER CRON JOB (No change needed here)
+// DAILY REMINDER CRON JOB (Updated to ensure correct recipient and daily schedule)
 // ========================================================
 cron.schedule('0 22 * * *', async () => {
     console.log(`[${new Date().toLocaleString()}] Running daily reminder check...`);
@@ -137,7 +137,7 @@ cron.schedule('0 22 * * *', async () => {
             const hasLoggedToday = user.progressHistory.some(
                 entry => entry.date >= todayStart
             );
-            if (!hasLoggedToday) {
+            if (!hasLoggedToday && user.email) { // Only remind users with a valid email
                 usersToRemind.push(user);
             }
         }
@@ -164,6 +164,7 @@ cron.schedule('0 22 * * *', async () => {
 
         // Send an email to each user who hasn't logged
         for (const user of usersToRemind) {
+            if (!user.email) continue; // Skip if no email
             const mailOptions = {
                 to: user.email,
                 from: process.env.EMAIL_FROM,
