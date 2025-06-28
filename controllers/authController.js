@@ -241,7 +241,7 @@ exports.sendResetLink = async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600000;
         await user.save();
 
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             host: process.env.EMAIL_HOST,
             port: parseInt(process.env.EMAIL_PORT, 10),
             secure: process.env.EMAIL_SECURE === 'true',
@@ -254,6 +254,10 @@ exports.sendResetLink = async (req, res) => {
             }
         });
         
+        // Use BASE_URL for reset link
+        const baseUrl = process.env.BASE_URL || `http://${req.headers.host}`;
+        const resetUrl = `${baseUrl}/auth/reset/${token}`;
+        
         const mailOptions = {
             to: user.email,
             from: process.env.EMAIL_FROM,
@@ -263,7 +267,7 @@ exports.sendResetLink = async (req, res) => {
                     <h2>Password Reset Request</h2>
                     <p>You are receiving this because you (or someone else) have requested the reset of the password for your account.</p>
                     <p>Please click on the button below, or paste the link into your browser to complete the process. This link is valid for one hour.</p>
-                    <a href="http://${req.headers.host}/auth/reset/${token}" style="background-color: #3b82f6; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">Reset Your Password</a>
+                    <a href="${resetUrl}" style="background-color: #3b82f6; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">Reset Your Password</a>
                     <p style="font-size: 12px; color: #777;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
                 </div>
             `
