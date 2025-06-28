@@ -68,30 +68,33 @@ passport.use(new GoogleStrategy({
   },
   async function(accessToken, refreshToken, profile, done) {
     try {
-      // Try to find user by googleId
+      console.log('🔍 Google OAuth Debug Info:');
+      console.log('  - Google ID:', profile.id);
+      console.log('  - Email:', profile.emails[0].value);
+      console.log('  - Name:', profile.displayName);
+      
+      // Use only Google ID as unique identifier
       let user = await User.findOne({ googleId: profile.id });
-      if (!user) {
-        // If not found, try to find by email
-        user = await User.findOne({ email: profile.emails[0].value });
-        if (user) {
-          // Link Google account to existing user
-          user.googleId = profile.id;
-          user.isVerified = true;
-          await user.save();
-        } else {
-          // Create a new user if not found by email
-          user = new User({
-            googleId: profile.id,
-            email: profile.emails[0].value,
-            name: profile.displayName || '',
-            isVerified: true,
-            password: crypto.randomBytes(20).toString('hex')
-          });
-          await user.save();
-        }
+      
+      if (user) {
+        console.log('  - Found existing user with this Google ID');
+      } else {
+        console.log('  - No existing user found, creating new user');
+        // Create a new user with this Google account
+        user = new User({
+          googleId: profile.id,
+          email: profile.emails[0].value,
+          name: profile.displayName || '',
+          isVerified: true,
+          password: crypto.randomBytes(20).toString('hex')
+        });
+        await user.save();
+        console.log('  - New user created with ID:', user._id);
       }
+      
       return done(null, user);
     } catch (err) {
+      console.error('  - Error in Google OAuth:', err);
       return done(err);
     }
   }

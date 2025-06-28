@@ -3,7 +3,20 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Render Home Page
+/**
+ * Renders the home page with user information
+ * 
+ * This function handles the main landing page of the application. It fetches the latest user data
+ * from the database to ensure the displayed information is current, even if the session data is stale.
+ * 
+ * @param {Object} req - Express request object containing user session data
+ * @param {Object} res - Express response object for rendering the page
+ * @returns {void} Renders the 'index' view with user data or null if no user/error
+ * 
+ * @example
+ * // Called when user visits the home page
+ * app.get('/', appController.getHomePage);
+ */
 exports.getHomePage = async (req, res) => {
     try {
         let user = null;
@@ -22,12 +35,40 @@ exports.getHomePage = async (req, res) => {
     }
 };
 
-// Render Profile Page
+/**
+ * Renders the user profile page
+ * 
+ * Displays the user's profile information and allows them to view their current settings.
+ * This page shows all user data including fitness goals, measurements, and preferences.
+ * 
+ * @param {Object} req - Express request object containing authenticated user data
+ * @param {Object} res - Express response object for rendering the page
+ * @returns {void} Renders the 'profile' view with user data and null success/error messages
+ * 
+ * @example
+ * // Called when user visits /profile
+ * app.get('/profile', authMiddleware.ensureAuth, appController.getProfilePage);
+ */
 exports.getProfilePage = async (req, res) => {
     res.render('profile', { user: req.user, success: null, error: null });
 };
 
-// Update Profile
+/**
+ * Updates the user's profile information
+ * 
+ * This function processes form submissions to update user profile data including personal
+ * information, fitness goals, dietary preferences, and daily meal preferences. It also
+ * calculates BMI and ideal weight based on the provided height, weight, and gender.
+ * 
+ * @param {Object} req - Express request object containing form data and authenticated user
+ * @param {Object} req.body - Form data including name, age, gender, height, weight, etc.
+ * @param {Object} res - Express response object for rendering the updated profile
+ * @returns {void} Renders the 'profile' view with updated user data and success/error messages
+ * 
+ * @example
+ * // Called when user submits profile update form
+ * app.post('/profile', authMiddleware.ensureAuth, appController.updateProfile);
+ */
 exports.updateProfile = async (req, res) => {
     let { name, age, gender, height, weight, fitnessGoal, activityLevel, dietaryPreference, dailyBreakfast, dailyLunch, dailySnacks, dailyDinner } = req.body;
     // Ensure dietaryPreference is always an array
@@ -58,7 +99,20 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
-// Render Progress Page
+/**
+ * Renders the progress tracking page
+ * 
+ * Displays the user's progress history and allows them to log new progress entries.
+ * This page shows a history of all logged food and workout activities with AI-generated reviews.
+ * 
+ * @param {Object} req - Express request object containing authenticated user data
+ * @param {Object} res - Express response object for rendering the page
+ * @returns {void} Renders the 'progress' view with user data and flash messages
+ * 
+ * @example
+ * // Called when user visits /progress
+ * app.get('/progress', authMiddleware.ensureAuth, appController.getProgressPage);
+ */
 exports.getProgressPage = async (req, res) => {
     try {
         // We must fetch the user from the DB to ensure we have the full, up-to-date progress history.
@@ -75,7 +129,25 @@ exports.getProgressPage = async (req, res) => {
     }
 };
 
-// Log Progress and get AI review
+/**
+ * Logs user progress and generates AI review
+ * 
+ * This function processes daily food and workout logs submitted by the user. It uses
+ * Google's Gemini AI to analyze the logs in the context of the user's fitness goals
+ * and provides a personalized review with a score out of 100. The progress entry is
+ * then saved to the user's progress history.
+ * 
+ * @param {Object} req - Express request object containing form data and authenticated user
+ * @param {Object} req.body - Form data containing foodLog and workoutLog
+ * @param {string} req.body.foodLog - User's description of what they ate today
+ * @param {string} req.body.workoutLog - User's description of their workout activities
+ * @param {Object} res - Express response object for rendering the progress page
+ * @returns {void} Renders the 'progress' view with updated user data and AI review
+ * 
+ * @example
+ * // Called when user submits daily progress log
+ * app.post('/progress', authMiddleware.ensureAuth, appController.logProgress);
+ */
 exports.logProgress = async (req, res) => {
     const { foodLog, workoutLog } = req.body;
     const user = req.user;
@@ -112,12 +184,16 @@ exports.logProgress = async (req, res) => {
             console.error("Error parsing progress review JSON:", text);
             return res.render('progress', { user, review: null, success: null, error: 'AI failed to generate a review. Please try again.'});
         }
+        // Create a date object for today at midnight in local timezone
+        const today = new Date();
+        const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
         const progressEntry = {
             foodLog,
             workoutLog,
             aiReview: reviewData.review,
             aiScore: reviewData.aiScore,
-            date: new Date()
+            date: todayAtMidnight
         };
         await User.findByIdAndUpdate(user._id, {
             $push: { progressHistory: { $each: [progressEntry], $position: 0 } }

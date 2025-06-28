@@ -10,6 +10,21 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // ==========================================================
 // HELPER FUNCTION (No changes needed)
 // ==========================================================
+
+/**
+ * Cleans and extracts JSON from AI response text
+ * 
+ * This helper function processes raw text responses from the Gemini AI API and extracts
+ * valid JSON objects. It handles common formatting issues and ensures the response
+ * can be properly parsed as JSON.
+ * 
+ * @param {string} rawText - The raw text response from the AI API
+ * @returns {string|null} - Cleaned JSON string or null if no valid JSON found
+ * 
+ * @example
+ * const cleanedJson = cleanAIResponse("Here's your plan: {\"name\": \"test\"}");
+ * // Returns: '{"name": "test"}'
+ */
 function cleanAIResponse(rawText) {
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -27,8 +42,21 @@ function cleanAIResponse(rawText) {
 // ==========================================================
 
 /**
- * GET DIET PLAN - AI's Creative Kitchen (Text-Only as per dietPlan.ejs)
- * -- UPGRADED PROMPT FOR GOAL ADHERENCE --
+ * Generates personalized diet plan using AI
+ * 
+ * This function creates a comprehensive, goal-oriented diet plan using Google's Gemini AI.
+ * The AI analyzes the user's fitness goals, dietary preferences, and body metrics to generate
+ * a customized meal plan with multiple options for each meal. The plan is specifically
+ * tailored to help users achieve their fitness objectives (weight loss, muscle gain, etc.).
+ * 
+ * @param {Object} req - Express request object containing authenticated user data
+ * @param {Object} req.user - User object with profile information (fitnessGoal, weight, dietaryPreference, etc.)
+ * @param {Object} res - Express response object for rendering the diet plan page
+ * @returns {void} Renders the 'dietPlan' view with AI-generated meal plan or error message
+ * 
+ * @example
+ * // Called when user requests a new diet plan
+ * app.get('/diet-plan', authMiddleware.ensureAuth, aiController.getDietPlan);
  */
 exports.getDietPlan = async (req, res) => {
     try {
@@ -93,8 +121,22 @@ exports.getDietPlan = async (req, res) => {
 
 
 /**
- * GET WORKOUT PLAN - WITH YOUTUBE VIDEO SEARCH QUERIES
- * -- UPGRADED PROMPT FOR VIDEOS & GOAL ADHERENCE --
+ * Generates personalized workout plan with YouTube video integration
+ * 
+ * This function creates a comprehensive, goal-oriented workout plan using Google's Gemini AI.
+ * The AI analyzes the user's fitness goals and activity level to generate a customized
+ * workout routine with 5 exercises. Each exercise includes a YouTube search query to
+ * help users find instructional videos. The plan is specifically tailored to help users
+ * achieve their fitness objectives safely and effectively.
+ * 
+ * @param {Object} req - Express request object containing authenticated user data
+ * @param {Object} req.user - User object with profile information (fitnessGoal, activityLevel, etc.)
+ * @param {Object} res - Express response object for rendering the workout plan page
+ * @returns {void} Renders the 'workoutPlan' view with AI-generated workout plan or error message
+ * 
+ * @example
+ * // Called when user requests a new workout plan
+ * app.get('/workout-plan', authMiddleware.ensureAuth, aiController.getWorkoutPlan);
  */
 exports.getWorkoutPlan = async (req, res) => {
     const user = req.user;
@@ -169,8 +211,23 @@ exports.getWorkoutPlan = async (req, res) => {
 
 
 /**
- * POST PROGRESS LOG - AI's Daily Report Card
- * -- FIXED HEATMAP UPDATE & UPGRADED PROMPT --
+ * Processes daily progress logs and generates AI-powered feedback
+ * 
+ * This function handles the submission of daily food and workout logs from users.
+ * It uses Google's Gemini AI to analyze the logs in the context of the user's
+ * fitness goals and provides personalized feedback with a score out of 10.
+ * The progress entry is saved to the user's progress history for tracking.
+ * 
+ * @param {Object} req - Express request object containing form data and authenticated user
+ * @param {Object} req.body - Form data containing daily logs
+ * @param {string} req.body.foodLog - User's description of what they ate today
+ * @param {string} req.body.workoutLog - User's description of their workout activities
+ * @param {Object} res - Express response object for redirecting after processing
+ * @returns {void} Redirects to profile page with success message or back to progress page with error
+ * 
+ * @example
+ * // Called when user submits daily progress log
+ * app.post('/progress', authMiddleware.ensureAuth, aiController.postProgress);
  */
 exports.postProgress = async (req, res) => {
     try {
@@ -229,7 +286,17 @@ exports.postProgress = async (req, res) => {
         const parsedResponse = JSON.parse(text);
         const { aiScore, aiReview } = parsedResponse;
         
-        user.progressHistory.push({ date: new Date(), foodLog, workoutLog, aiScore, aiReview });
+        // Create a date object for today at midnight in local timezone
+        const today = new Date();
+        const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        user.progressHistory.push({ 
+            date: todayAtMidnight, 
+            foodLog, 
+            workoutLog, 
+            aiScore, 
+            aiReview 
+        });
         await user.save();
 
         req.flash('success', `Progress logged! The AI gave you a score of ${aiScore}/10! Your Consistency Map has been updated.`);
@@ -247,7 +314,23 @@ exports.postProgress = async (req, res) => {
 };
 
 /**
- * YOUTUBE SEARCH ENDPOINT for workoutPlan.ejs
+ * Searches YouTube for workout instruction videos
+ * 
+ * This function provides an API endpoint that searches YouTube for instructional
+ * videos related to workout exercises. It uses the YouTube Data API to find
+ * relevant "how-to" videos based on the provided search query. This is used
+ * by the workout plan page to help users find proper form demonstrations.
+ * 
+ * @param {Object} req - Express request object containing search query
+ * @param {string} req.query.q - The search query for finding workout videos
+ * @param {Object} res - Express response object for returning video data
+ * @returns {Object} JSON response containing video ID or error message
+ * 
+ * @example
+ * // Called when frontend needs to find a workout video
+ * app.get('/youtube-search', aiController.youtubeSearch);
+ * // Request: GET /youtube-search?q=how to do goblet squat
+ * // Response: {"videoId": "dQw4w9WgXcQ"}
  */
 exports.youtubeSearch = async (req, res) => {
     const query = req.query.q;

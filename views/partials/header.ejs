@@ -48,6 +48,9 @@
 </head>
 <body class="bg-white text-gray-800 transition-colors duration-500">
 
+<!-- Define profileImg variable -->
+<% const profileImg = user && user.profileImage ? user.profileImage : '/images/icon.webp'; %>
+
 <!-- ============================================ -->
 <!-- GLASSMORPHISM NAVBAR -->
 <!-- ============================================ -->
@@ -59,6 +62,7 @@
             <img src="/images/logo.png" alt="FitGenie Logo" class="w-12 h-12 rounded-full transition-transform group-hover:rotate-12">
             <span class="font-black text-2xl text-gray-900 tracking-tight hidden sm:inline">Fit<span class="gradient-text bg-gradient-to-r from-blue-400 to-purple-500">Genie</span></span>
         </a>
+        
         <!-- Main Navigation Links (Desktop) -->
         <div class="hidden md:flex items-center space-x-8">
             <a href="/" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Home</a>
@@ -67,24 +71,67 @@
             <a href="/workout-plan" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Workout Plan</a>
             <a href="/progress" class="nav-link text-gray-700 hover:text-blue-700 transition-colors duration-300 font-semibold text-base">Track Progress</a>
         </div>
+        
         <!-- Right-side Controls -->
         <div class="flex items-center space-x-6">
             <% if (user) { %>
-                <% const profileImg = user && user.profileImage ? user.profileImage : '/images/icon.webp'; %>
-                <a href="/auth/logout" class="text-gray-400 hover:text-blue-700 transition-colors" title="Logout">
+                <a href="/auth/logout" class="text-gray-400 hover:text-blue-700 transition-colors hidden sm:block" title="Logout">
                     <i class="fas fa-sign-out-alt text-2xl"></i>
                 </a>
                 <a href="/profile" class="block group" title="Profile">
                     <img class="w-12 h-12 rounded-full border-2 border-blue-300 group-hover:border-blue-500 transition-all duration-300 object-cover" src="<%= profileImg %>" alt="User profile">
                 </a>
             <% } else { %>
-                <a href="/auth/login" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg">
+                <a href="/auth/login" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg hidden sm:inline-flex">
                     Login
                 </a>
             <% } %>
+            
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn md:hidden text-gray-700 hover:text-blue-700 transition-colors" id="mobile-menu-btn">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
         </div>
     </div>
 </nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu md:hidden" id="mobile-menu">
+    <button class="mobile-menu-close" id="mobile-menu-close">
+        <i class="fas fa-times"></i>
+    </button>
+    
+    <div class="flex flex-col items-center space-y-6">
+        <!-- Mobile Navigation Links -->
+        <a href="/" class="nav-link text-white hover:text-blue-300 transition-colors duration-300 font-semibold text-lg">Home</a>
+        <a href="/profile" class="nav-link text-white hover:text-blue-300 transition-colors duration-300 font-semibold text-lg">Dashboard</a>
+        <a href="/diet-plan" class="nav-link text-white hover:text-blue-300 transition-colors duration-300 font-semibold text-lg">Diet Plan</a>
+        <a href="/workout-plan" class="nav-link text-white hover:text-blue-300 transition-colors duration-300 font-semibold text-lg">Workout Plan</a>
+        <a href="/progress" class="nav-link text-white hover:text-blue-300 transition-colors duration-300 font-semibold text-lg">Track Progress</a>
+        
+        <!-- Mobile Auth Links -->
+        <% if (user) { %>
+            <div class="flex flex-col items-center space-y-4 pt-4 border-t border-gray-600 w-full">
+                <a href="/profile" class="flex items-center space-x-3 text-white hover:text-blue-300 transition-colors">
+                    <img class="w-10 h-10 rounded-full border-2 border-blue-300" src="<%= profileImg %>" alt="User profile">
+                    <span class="font-semibold"><%= user.name %></span>
+                </a>
+                <a href="/auth/logout" class="text-white hover:text-red-300 transition-colors font-semibold">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+            </div>
+        <% } else { %>
+            <div class="flex flex-col items-center space-y-4 pt-4 border-t border-gray-600 w-full">
+                <a href="/auth/login" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105">
+                    Login
+                </a>
+                <a href="/auth/register" class="text-white hover:text-blue-300 transition-colors font-semibold">
+                    Create Account
+                </a>
+            </div>
+        <% } %>
+    </div>
+</div>
 
 <!-- Main content starts here, pt-24 provides space for the fixed navbar -->
 <main class="pt-24">
@@ -100,6 +147,44 @@
             // For the home link, we check for "/"
             if (link.getAttribute('href') === currentPath) {
                 link.classList.add('active-nav-link');
+            }
+        });
+        
+        // --- MOBILE MENU FUNCTIONALITY ---
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuClose = document.getElementById('mobile-menu-close');
+        
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+        
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+        
+        // Close mobile menu when clicking on a link
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                closeMobileMenu();
+            }
+        });
+        
+        // Close mobile menu on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                closeMobileMenu();
             }
         });
     });

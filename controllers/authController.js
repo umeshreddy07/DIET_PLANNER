@@ -10,8 +10,18 @@ const nodemailer = require('nodemailer');
 
 /**
  * Creates a JWT for a given user and sets it as a secure, httpOnly cookie.
- * @param {object} res - The Express response object.
- * @param {object} user - The mongoose user object.
+ * 
+ * This helper function generates a JSON Web Token containing the user's ID and
+ * sets it as a secure cookie in the response. The token is configured with
+ * appropriate security settings including httpOnly, sameSite, and secure flags.
+ * 
+ * @param {Object} res - The Express response object for setting cookies
+ * @param {Object} user - The mongoose user object containing user data
+ * @returns {void} Sets the JWT cookie in the response
+ * 
+ * @example
+ * // Called after successful authentication
+ * setTokenCookie(res, user);
  */
 function setTokenCookie(res, user) {
     // Create the token payload containing the user's ID
@@ -32,10 +42,42 @@ function setTokenCookie(res, user) {
 // AUTHENTICATION FLOW (JWT-BASED)
 // ==========================================================
 
-// Show Register Page
+/**
+ * Renders the user registration page
+ * 
+ * This function displays the registration form where new users can create
+ * their accounts. It renders the 'register' view without any data.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object for rendering the page
+ * @returns {void} Renders the 'register' view
+ * 
+ * @example
+ * // Called when user visits /auth/register
+ * app.get('/auth/register', authController.showRegister);
+ */
 exports.showRegister = (req, res) => res.render('register');
 
-// Handle Register POST
+/**
+ * Handles user registration form submission
+ * 
+ * This function processes the registration form data, validates the input,
+ * checks for existing users, creates a new user account, and redirects
+ * to the login page upon successful registration.
+ * 
+ * @param {Object} req - Express request object containing form data
+ * @param {Object} req.body - Form data including name, email, password, confirmPassword
+ * @param {string} req.body.name - User's full name
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's chosen password
+ * @param {string} req.body.confirmPassword - Password confirmation
+ * @param {Object} res - Express response object for rendering or redirecting
+ * @returns {void} Renders register page with errors or redirects to login on success
+ * 
+ * @example
+ * // Called when user submits registration form
+ * app.post('/auth/register', authController.register);
+ */
 exports.register = async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
     let errors = [];
@@ -73,12 +115,37 @@ exports.register = async (req, res) => {
     }
 };
 
-// Show Login Page
+/**
+ * Renders the user login page
+ * 
+ * This function displays the login form where existing users can authenticate
+ * and access their accounts. It renders the 'login' view without any data.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object for rendering the page
+ * @returns {void} Renders the 'login' view
+ * 
+ * @example
+ * // Called when user visits /auth/login
+ * app.get('/auth/login', authController.showLogin);
+ */
 exports.showLogin = (req, res) => res.render('login');
 
 /**
- * Handle Login POST - The JWT Way
- * We use a custom callback to handle the result of authentication.
+ * Handles user login form submission using JWT authentication
+ * 
+ * This function processes the login form data using Passport.js local strategy
+ * for authentication. Upon successful authentication, it creates a JWT token
+ * and sets it as a secure cookie, then redirects to the profile page.
+ * 
+ * @param {Object} req - Express request object containing form data
+ * @param {Object} res - Express response object for setting cookies and redirecting
+ * @param {Function} next - Express next function for error handling
+ * @returns {void} Redirects to login page with error or to profile page on success
+ * 
+ * @example
+ * // Called when user submits login form
+ * app.post('/auth/login', authController.login);
  */
 exports.login = (req, res, next) => {
     // We tell passport to NOT use sessions and use our custom callback
@@ -103,8 +170,20 @@ exports.login = (req, res, next) => {
 };
 
 /**
- * Handle Logout - The JWT Way
- * We simply clear the JWT cookie from the user's browser.
+ * Handles user logout by clearing JWT cookie
+ * 
+ * This function clears the JWT authentication cookie from the user's browser,
+ * effectively logging them out of the application. It then redirects to the
+ * login page with a success message.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object for clearing cookies and redirecting
+ * @param {Function} next - Express next function for error handling
+ * @returns {void} Clears JWT cookie and redirects to login page
+ * 
+ * @example
+ * // Called when user clicks logout
+ * app.get('/auth/logout', authController.logout);
  */
 exports.logout = (req, res, next) => {
     res.clearCookie('jwt'); // Remove the token cookie
@@ -115,7 +194,40 @@ exports.logout = (req, res, next) => {
 // ==========================================================
 // PASSWORD RESET LOGIC (No changes needed here)
 // ==========================================================
+
+/**
+ * Renders the forgot password page
+ * 
+ * This function displays the forgot password form where users can request
+ * a password reset link to be sent to their email address.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object for rendering the page
+ * @returns {void} Renders the 'forgotPassword' view
+ * 
+ * @example
+ * // Called when user visits /auth/forgot
+ * app.get('/auth/forgot', authController.showForgotPassword);
+ */
 exports.showForgotPassword = (req, res) => res.render('forgotPassword');
+
+/**
+ * Handles forgot password form submission and sends reset email
+ * 
+ * This function processes the forgot password form, generates a secure reset token,
+ * saves it to the user's account with an expiration time, and sends an email
+ * containing a link to reset their password.
+ * 
+ * @param {Object} req - Express request object containing email address
+ * @param {Object} req.body - Form data containing email
+ * @param {string} req.body.email - User's email address for password reset
+ * @param {Object} res - Express response object for redirecting
+ * @returns {void} Redirects to forgot password page with success/error message
+ * 
+ * @example
+ * // Called when user submits forgot password form
+ * app.post('/auth/forgot', authController.sendResetLink);
+ */
 exports.sendResetLink = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
@@ -129,7 +241,7 @@ exports.sendResetLink = async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600000;
         await user.save();
 
-        const transporter = nodemailer.createTransport({
+        const transporter = nodemailer.createTransporter({
             host: process.env.EMAIL_HOST,
             port: parseInt(process.env.EMAIL_PORT, 10),
             secure: process.env.EMAIL_SECURE === 'true',
@@ -168,6 +280,22 @@ exports.sendResetLink = async (req, res) => {
     }
 };
 
+/**
+ * Renders the password reset page with token validation
+ * 
+ * This function validates the reset token from the URL and renders the
+ * password reset form if the token is valid and not expired. If the token
+ * is invalid or expired, it redirects to the forgot password page.
+ * 
+ * @param {Object} req - Express request object containing reset token
+ * @param {string} req.params.token - The password reset token from the URL
+ * @param {Object} res - Express response object for rendering or redirecting
+ * @returns {void} Renders reset password page or redirects to forgot password page
+ * 
+ * @example
+ * // Called when user clicks reset link from email
+ * app.get('/auth/reset/:token', authController.showResetPassword);
+ */
 exports.showResetPassword = async (req, res) => {
     const user = await User.findOne({ 
         resetPasswordToken: req.params.token, 
@@ -181,6 +309,25 @@ exports.showResetPassword = async (req, res) => {
     res.render('resetPassword', { token: req.params.token, user: null });
 };
 
+/**
+ * Handles password reset form submission
+ * 
+ * This function processes the password reset form, validates the new password,
+ * updates the user's password in the database, and clears the reset token.
+ * Upon successful password reset, it redirects to the login page.
+ * 
+ * @param {Object} req - Express request object containing form data and token
+ * @param {string} req.params.token - The password reset token from the URL
+ * @param {Object} req.body - Form data containing new password and confirmation
+ * @param {string} req.body.password - New password
+ * @param {string} req.body.confirmPassword - Password confirmation
+ * @param {Object} res - Express response object for redirecting
+ * @returns {void} Redirects to login page on success or back to reset page on error
+ * 
+ * @example
+ * // Called when user submits new password
+ * app.post('/auth/reset/:token', authController.resetPassword);
+ */
 exports.resetPassword = async (req, res) => {
     try {
         const user = await User.findOne({ 
